@@ -384,4 +384,161 @@ document.addEventListener('DOMContentLoaded', function() {
         saveTasks(exampleTasks);
         renderTasks();
     }
+// Функция для создания анимированных метеоритов
+function createMeteors() {
+    const meteorCount = 7; // Количество метеоритов
+    
+    for (let i = 0; i < meteorCount; i++) {
+        const meteor = document.createElement('div');
+        meteor.className = 'meteor';
+        
+        // Случайные параметры для каждого метеорита
+        const startX = Math.random() * window.innerWidth;
+        const startY = Math.random() * window.innerHeight * 0.5;
+        const distance = 200 + Math.random() * 300;
+        const duration = 3 + Math.random() * 5;
+        const delay = Math.random() * 5;
+        
+        // Устанавливаем начальное положение
+        meteor.style.left = `${startX}px`;
+        meteor.style.top = `${startY}px`;
+        
+        // Создаем анимацию
+        meteor.style.setProperty('--tx', `${distance}px`);
+        meteor.style.setProperty('--ty', `${distance}px`);
+        
+        // Стилизуем метеорит
+        const size = 2 + Math.random() * 3;
+        meteor.style.width = `${size}px`;
+        meteor.style.height = `${size}px`;
+        
+        // Добавляем анимацию
+        meteor.style.animation = `meteor ${duration}s linear ${delay}s infinite`;
+        
+        // Добавляем в body
+        document.body.appendChild(meteor);
+        
+        // Настройка повторной анимации
+        setTimeout(() => {
+            meteor.style.animation = 'none';
+            setTimeout(() => {
+                meteor.style.animation = `meteor ${duration}s linear ${delay}s infinite`;
+            }, 10);
+        }, (duration + delay) * 1000);
+    }
+}
+
+// Создаем звезды на фоне
+function createStars() {
+    const starCount = 100;
+    const body = document.querySelector('body');
+    
+    for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.style.position = 'fixed';
+        star.style.width = `${0.5 + Math.random() * 1.5}px`;
+        star.style.height = star.style.width;
+        star.style.backgroundColor = 'white';
+        star.style.borderRadius = '50%';
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.opacity = `${0.2 + Math.random() * 0.8}`;
+        star.style.zIndex = '-1';
+        star.style.pointerEvents = 'none';
+        
+        // Добавляем мерцание
+        const twinkleDuration = 2 + Math.random() * 5;
+        star.style.animation = `twinkle ${twinkleDuration}s infinite alternate`;
+        
+        body.appendChild(star);
+    }
+}
+
+// Инициализация космического фона
+document.addEventListener('DOMContentLoaded', function() {
+    // Создаем метеориты после загрузки страницы
+    setTimeout(createMeteors, 500);
+    setTimeout(createStars, 1000);
+    
+    // Перезапускаем анимацию метеоритов каждые 30 секунд для разнообразия
+    setInterval(() => {
+        document.querySelectorAll('.meteor').forEach(meteor => {
+            meteor.remove();
+        });
+        createMeteors();
+    }, 30000);
 });
+
+// Добавляем анимацию для новых задач
+function animateTask(taskElement, index) {
+    taskElement.style.setProperty('--i', index);
+    taskElement.style.opacity = '0';
+    taskElement.style.transform = 'translateY(20px)';
+    
+    setTimeout(() => {
+        taskElement.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        taskElement.style.opacity = '1';
+        taskElement.style.transform = 'translateY(0)';
+    }, 10);
+}
+
+// Модифицируем функцию renderTasks, чтобы использовать анимацию
+function renderTasks() {
+    const tasks = getTasks();
+    tasksContainer.innerHTML = '';
+    
+    if (tasks.length === 0) {
+        tasksContainer.innerHTML = `
+            <div class="empty-state" style="text-align: center; padding: 30px; color: var(--text-secondary);">
+                <div style="font-size: 60px; margin-bottom: 15px; opacity: 0.7;">✨</div>
+                <p>Список дел пуст. Добавьте первую задачу!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    tasks.forEach((task, index) => {
+        const taskElement = document.createElement('div');
+        taskElement.className = `task-card ${task.completed ? 'completed' : ''}`;
+        taskElement.dataset.id = task.id;
+        
+        // Получаем полные данные тегов для задачи
+        const taskTags = defaultTags.filter(tag => task.tags.includes(tag.id));
+        
+        // Создаем HTML для тегов
+        const tagsHtml = taskTags.map(tag => 
+            `<span class="tag-chip" style="background: ${tag.color}22; border-color: ${tag.color}44;">${tag.name}</span>`
+        ).join('');
+        
+        taskElement.innerHTML = `
+            <div class="task-header">
+                <h3 class="task-title">${task.title}</h3>
+                <div class="task-actions">
+                    <input type="checkbox" class="task-complete" ${task.completed ? 'checked' : ''}>
+                    <button class="btn danger delete-task">×</button>
+                </div>
+            </div>
+            <div class="task-tags">
+                ${tagsHtml}
+            </div>
+        `;
+        
+        // Добавляем обработчики
+        const completeCheckbox = taskElement.querySelector('.task-complete');
+        completeCheckbox.addEventListener('change', () => {
+            toggleTaskCompletion(task.id);
+        });
+        
+        const deleteBtn = taskElement.querySelector('.delete-task');
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteTask(task.id);
+        });
+        
+        // Для свайпа на мобильных
+        setupSwipeToDelete(taskElement, task.id);
+        
+        tasksContainer.appendChild(taskElement);
+        animateTask(taskElement, index);
+    });
+}
