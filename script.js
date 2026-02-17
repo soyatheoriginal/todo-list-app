@@ -507,4 +507,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         createMeteors();
     }, 30000);
+    // Усиливаем анимации метеоритов
+setTimeout(() => {
+    document.querySelectorAll('.meteor').forEach(meteor => {
+        meteor.style.boxShadow = '0 0 20px 5px rgba(255, 255, 255, 0.95)';
+        meteor.querySelector(':after').style.background = 
+            'linear-gradient(90deg, rgba(255,255,255,0.95) 0%, transparent 100%)';
+    });
+}, 2000);
 });
